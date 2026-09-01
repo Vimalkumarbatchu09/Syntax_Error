@@ -10,7 +10,7 @@ import json
 import datetime
 import random
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.db import (
@@ -32,6 +32,19 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static")
 )
 app.secret_key = os.environ.get("NETGUARD_SECRET_KEY", "netguard-ai-cyber-secret-key-2026-hackathon")
+
+@app.route("/static/<path:filename>")
+def serve_static_asset(filename):
+    """Guaranteed static asset delivery across local dev and Vercel serverless."""
+    for folder in [
+        os.path.join(BASE_DIR, "public", "static"),
+        os.path.join(BASE_DIR, "static"),
+        os.path.join(BASE_DIR, "public")
+    ]:
+        target = os.path.join(folder, filename)
+        if os.path.exists(target):
+            return send_from_directory(folder, filename)
+    return send_from_directory(os.path.join(BASE_DIR, "static"), filename)
 
 # In-memory circular buffer of live telemetry snapshots (keeps last 30 snapshots for charts)
 TELEMETRY_HISTORY = []
