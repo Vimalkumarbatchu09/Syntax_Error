@@ -93,10 +93,18 @@ def seed_telemetry_history():
                 "avg_cpu": round(sum(e["cpu_utilization"] for e in snapshot) / len(snapshot), 1)
             })
 
+# Initialize database and seed initial telemetry snapshots at module load
+try:
+    init_db()
+    seed_telemetry_history()
+except Exception as _e:
+    print(f"[NetGuard AI] Startup initialization: {_e}")
+
 # ---------------------------------------------------------------------------
 # PAGE ROUTES
 # ---------------------------------------------------------------------------
 @app.route("/")
+@app.route("/api/index")
 def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
@@ -719,9 +727,11 @@ def api_settings():
 # ---------------------------------------------------------------------------
 @app.errorhandler(404)
 def not_found(e):
-    if request.is_json or request.path.startswith("/api/"):
+    if request.path.startswith("/api/") and request.path not in ["/api", "/api/", "/api/index"]:
         return jsonify({"error": "Requested resource was not found."}), 404
-    return render_template("login.html"), 404
+    if request.is_json:
+        return jsonify({"error": "Requested resource was not found."}), 404
+    return redirect(url_for("login"))
 
 @app.errorhandler(500)
 def server_error(e):
