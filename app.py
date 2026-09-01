@@ -310,8 +310,38 @@ def api_network_data():
 
     # Generate current telemetry for all simulated endpoints
     current_endpoints = []
+
+    # Continuous Autonomous Anomaly Simulation:
+    # Naturally introduce realistic anomalies into live traffic (~10% probability per 3s tick, ~every 25-30s)
+    should_inject_anomaly = random.random() < 0.10
+    anomaly_target_ep = random.choice(list(ENDPOINTS.keys())) if should_inject_anomaly else None
+
     for ep_id in sorted(ENDPOINTS.keys()):
-        telemetry = generate_normal_event(endpoint_id=ep_id)
+        if ep_id == anomaly_target_ep:
+            telemetry = generate_anomaly_event(endpoint_id=ep_id)
+            # Run Random Forest ML model in real time
+            pred = model_engine.predict_and_explain(telemetry)
+            if pred.get("prediction") == 1:
+                try:
+                    insert_anomaly(
+                        endpoint_id=ep_id,
+                        anomaly_type=pred.get("anomaly_type", "Abnormal Telemetry"),
+                        severity=pred.get("severity", "High"),
+                        confidence=pred.get("confidence", 0.92),
+                        bandwidth=telemetry["bandwidth"],
+                        latency=telemetry["latency"],
+                        packet_loss=telemetry["packet_loss"],
+                        cpu_utilization=telemetry["cpu_utilization"],
+                        memory_utilization=telemetry["memory_utilization"],
+                        active_connections=telemetry["active_connections"],
+                        explanation=pred.get("explanation", "Autonomous real-time anomaly detected by Random Forest model."),
+                        contributing_factors=json.dumps(pred.get("contributing_factors", []))
+                    )
+                except Exception as _e:
+                    print(f"[NetGuard AI] Autonomous anomaly logging notice: {_e}")
+        else:
+            telemetry = generate_normal_event(endpoint_id=ep_id)
+
         telemetry["time_label"] = now_str
         telemetry["role"] = ENDPOINTS[ep_id]["role"]
         telemetry["location"] = ENDPOINTS[ep_id]["location"]
