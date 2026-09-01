@@ -12,6 +12,7 @@ import random
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from database.db import (
     init_db, get_db_connection, insert_anomaly,
@@ -32,6 +33,9 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static")
 )
 app.secret_key = os.environ.get("NETGUARD_SECRET_KEY", "netguard-ai-cyber-secret-key-2026-hackathon")
+
+# ProxyFix ensures HTTPS and correct client IP behind Vercel edge reverse proxy
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 @app.route("/static/<path:filename>")
 def serve_static_asset(filename):
@@ -104,13 +108,9 @@ except Exception as _e:
 # PAGE ROUTES
 # ---------------------------------------------------------------------------
 @app.route("/")
-@app.route("/api/index")
-def index():
-    if "user_id" in session:
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("login"))
-
 @app.route("/login")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def login():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
@@ -727,11 +727,11 @@ def api_settings():
 # ---------------------------------------------------------------------------
 @app.errorhandler(404)
 def not_found(e):
-    if request.path.startswith("/api/") and request.path not in ["/api", "/api/", "/api/index"]:
+    if request.path.startswith("/api/") and request.path not in ["/api", "/api/", "/api/index", "/api/index.py"]:
         return jsonify({"error": "Requested resource was not found."}), 404
     if request.is_json:
         return jsonify({"error": "Requested resource was not found."}), 404
-    return redirect(url_for("login"))
+    return render_template("login.html"), 404
 
 @app.errorhandler(500)
 def server_error(e):
