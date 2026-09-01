@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Anomaly Incident Log{% endblock %}
+{% block page_title %}Anomaly Detection Logs{% endblock %}
+
+{% block content %}
+<!-- Filters Bar -->
+<div class="glass-panel" style="padding: 16px 22px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <!-- Severity Filter -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label for="filter-severity" style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">SEVERITY:</label>
+        <select id="filter-severity" class="form-control" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">
+          <option value="">All Severities</option>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+
+      <!-- Endpoint Filter -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label for="filter-endpoint" style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">ENDPOINT:</label>
+        <select id="filter-endpoint" class="form-control" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">
+          <option value="">All Endpoints</option>
+          <option value="EP-001">EP-001 (192.168.1.101)</option>
+          <option value="EP-002">EP-002 (192.168.1.102)</option>
+          <option value="EP-003">EP-003 (192.168.1.103)</option>
+          <option value="EP-004">EP-004 (192.168.1.104)</option>
+          <option value="EP-005">EP-005 (192.168.1.105)</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label for="filter-status" style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">STATUS:</label>
+        <select id="filter-status" class="form-control" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Investigating">Investigating</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);" id="anomalies-count-display">
+        Showing -- incidents
+      </span>
+      <button class="btn btn-secondary" id="btn-refresh-anomalies" style="padding: 6px 14px; font-size: 0.8rem;">
+        Refresh Table
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Anomaly History Table -->
+<div class="glass-panel" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="cyber-table" id="anomalies-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Endpoint</th>
+          <th>IP Address</th>
+          <th>Anomaly Profile</th>
+          <th>Severity</th>
+          <th>ML Confidence</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="anomalies-table-body">
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            Loading anomaly telemetry records...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/anomalies.js') }}"></script>
+{% endblock %}

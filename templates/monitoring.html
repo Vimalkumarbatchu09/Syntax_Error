@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Real-Time Telemetry Monitoring{% endblock %}
+{% block page_title %}Network Telemetry Monitoring{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h2 style="font-size: 1.2rem; color: #fff; font-weight: 700;">Simulated Telemetry Streams</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+      Continuous multi-dimensional packet telemetry across simulated endpoints EP-001..005
+    </p>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span class="badge badge-normal" id="monitoring-pulse-badge">
+      <span class="pulse-dot"></span> LIVE POLLING 3S
+    </span>
+  </div>
+</div>
+
+<!-- 8 Dimension Chart Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 24px;">
+  <!-- 1. Bandwidth Throughput -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+          1. Bandwidth Throughput
+        </div>
+        <div class="panel-subtitle">Megabits per second (Mbps)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: var(--cyan);" id="mon-val-bw">-- Mbps</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-bandwidth"></canvas>
+    </div>
+  </div>
+
+  <!-- 2. Network Latency -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          2. Round-Trip Latency
+        </div>
+        <div class="panel-subtitle">Millisecond response time (ms)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: var(--purple);" id="mon-val-lat">-- ms</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-latency"></canvas>
+    </div>
+  </div>
+
+  <!-- 3. Packet Loss -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          3. Transmission Packet Loss
+        </div>
+        <div class="panel-subtitle">Dropped packet ratio (%)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: var(--red);" id="mon-val-loss">-- %</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-packet-loss"></canvas>
+    </div>
+  </div>
+
+  <!-- 4. CPU Utilization -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line></svg>
+          4. Host CPU Utilization
+        </div>
+        <div class="panel-subtitle">Host processor workload (%)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: var(--amber);" id="mon-val-cpu">-- %</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-cpu"></canvas>
+    </div>
+  </div>
+
+  <!-- 5. Memory Utilization -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+          5. RAM / Memory Utilization
+        </div>
+        <div class="panel-subtitle">Simulated memory allocation (%)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: #38bdf8;" id="mon-val-mem">-- %</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-memory"></canvas>
+    </div>
+  </div>
+
+  <!-- 6. Active Connections -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          6. Active TCP Sockets
+        </div>
+        <div class="panel-subtitle">Concurrent open connections</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: #a855f7;" id="mon-val-conns">--</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-connections"></canvas>
+    </div>
+  </div>
+
+  <!-- 7. Packets Sent -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          7. Transmission Packets Sent
+        </div>
+        <div class="panel-subtitle">Outbound traffic rate (pps)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: var(--green);" id="mon-val-sent">-- pps</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-packets-sent"></canvas>
+    </div>
+  </div>
+
+  <!-- 8. Packets Received -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          8. Ingress Packets Received
+        </div>
+        <div class="panel-subtitle">Inbound traffic rate (pps)</div>
+      </div>
+      <div class="metric-value" style="font-size: 1.2rem; color: #06b6d4;" id="mon-val-recv">-- pps</div>
+    </div>
+    <div style="height: 200px; width: 100%;">
+      <canvas id="chart-packets-recv"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
+{% endblock %}

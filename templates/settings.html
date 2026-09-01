@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Operations Settings{% endblock %}
+{% block page_title %}Platform &amp; NOC Settings{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px;">
+  <!-- Telemetry Simulation & Ingestion Settings -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Telemetry Ingestion &amp; Polling
+        </div>
+        <div class="panel-subtitle">Configure synthetic telemetry generation parameters</div>
+      </div>
+    </div>
+
+    <form id="settings-form">
+      <div class="form-group">
+        <label for="polling-interval">Dashboard Polling Interval (Seconds)</label>
+        <select id="polling-interval" class="form-control">
+          <option value="1">1 Second (High Speed Refresh)</option>
+          <option value="3" selected>3 Seconds (Recommended Default)</option>
+          <option value="5">5 Seconds (Low Overhead)</option>
+          <option value="10">10 Seconds (Conservative)</option>
+        </select>
+        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Controls real-time telemetry streaming tick frequency.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="traffic-sensitivity">Random Forest Anomaly Sensitivity</label>
+        <select id="traffic-sensitivity" class="form-control">
+          <option value="Standard" selected>Standard (Balanced Precision &amp; Recall)</option>
+          <option value="High">High Sensitivity (Early Warning Threshold)</option>
+          <option value="Conservative">Conservative (Flag Major Deviations Only)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-top: 20px;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
+          <input type="checkbox" id="auto-quarantine" style="accent-color: var(--cyan);">
+          Automated Endpoint Isolation (Simulated Quarantine on Critical Alerts)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
+          <input type="checkbox" id="email-notifications" style="accent-color: var(--cyan);">
+          Simulated SOC Alert Dispatch (Email / Webhook Notification)
+        </label>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btn-save-settings" style="margin-top: 14px;">
+        Save Configuration
+      </button>
+    </form>
+  </div>
+
+  <!-- User Profile & Session Info -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Active Operator Credentials
+        </div>
+        <div class="panel-subtitle">Current Security Operations Center Analyst Session</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <div class="user-avatar" style="width: 48px; height: 48px; font-size: 1.1rem;">
+          {{ user[:2].upper() if user else 'AD' }}
+        </div>
+        <div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: #fff;">{{ user or 'Administrator' }}</div>
+          <div style="font-size: 0.8rem; color: var(--green); font-family: var(--font-mono);">Role: Tier 3 SOC Security Analyst</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Session Type: Authenticated Flask Session</div>
+        </div>
+      </div>
+
+      <div style="padding: 16px; background: rgba(0, 240, 255, 0.04); border: 1px solid var(--border-neon); border-radius: 8px;">
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--cyan); margin-bottom: 6px;">Database Storage</div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+          SQLite Engine: <code>database/netguard.db</code><br>
+          Tables: <code>users</code>, <code>anomalies</code><br>
+          Password Hashes: Werkzeug scrypt/pbkdf2
+        </div>
+      </div>
+
+      <a href="{{ url_for('logout') }}" class="btn btn-danger" style="margin-top: 10px; width: fit-content;">
+        Sign Out of NOC
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Important Project Scope Notice -->
+<div class="glass-panel" style="margin-top: 10px; background: rgba(13, 20, 36, 0.95); border-left: 5px solid var(--cyan);">
+  <div class="panel-header" style="margin-bottom: 8px;">
+    <div class="panel-title" style="color: var(--cyan);">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      Architecture Scope &amp; Simulation Notice
+    </div>
+  </div>
+  <p style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6;">
+    NetGuard AI is an entirely <strong>software-based cyber telemetry platform</strong>. All network telemetry, latency fluctuations, bandwidth surges, connection floods, and packet loss events are synthetically generated for simulated virtual endpoints (<code>EP-001</code> through <code>EP-005</code>). There are <strong>no physical sensors, IoT devices, ESP32, Arduino, or external hardware telemetry integrations</strong> required to operate this software.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const saveBtn = document.getElementById('btn-save-settings');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const polling = document.getElementById('polling-interval').value;
+      const sensitivity = document.getElementById('traffic-sensitivity').value;
+      const quarantine = document.getElementById('auto-quarantine').checked;
+      const email = document.getElementById('email-notifications').checked;
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            polling_interval: parseInt(polling),
+            traffic_sensitivity: sensitivity,
+            auto_quarantine: quarantine,
+            email_notifications: email
+          })
+        });
+
+        if (res.ok) {
+          showToast('Settings saved successfully.', 'success');
+        } else {
+          showToast('Failed to save settings.', 'danger');
+        }
+      } catch (e) {
+        showToast('Error saving settings: ' + e.message, 'danger');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Configuration';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

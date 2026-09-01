@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Network Telemetry Analytics{% endblock %}
+{% block page_title %}Telemetry & Anomaly Analytics{% endblock %}
+
+{% block content %}
+<!-- Top Aggregate Metrics -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Estimated Volume</div>
+      <div class="metric-icon-wrap cyan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="stat-total-traffic">-- GB</div>
+    <div class="metric-subtext">Cumulative Telemetry Volume</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Avg Bandwidth</div>
+      <div class="metric-icon-wrap purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="stat-avg-bw">-- Mbps</div>
+    <div class="metric-subtext">Mean Baseline Throughput</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Avg Latency</div>
+      <div class="metric-icon-wrap amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="stat-avg-lat">-- ms</div>
+    <div class="metric-subtext">Mean Network RTT</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Avg Packet Loss</div>
+      <div class="metric-icon-wrap green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="stat-avg-loss">-- %</div>
+    <div class="metric-subtext">Transmission Integrity</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Most Affected Node</div>
+      <div class="metric-icon-wrap red">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="stat-top-ep" style="color: var(--critical);">--</div>
+    <div class="metric-subtext danger">Targeted by Spikes / Floods</div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+  <!-- Severity Breakdown (Doughnut Chart) -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+          Anomaly Severity Distribution
+        </div>
+        <div class="panel-subtitle">Classification Breakdown: Low, Medium, High, Critical</div>
+      </div>
+    </div>
+    <div style="height: 270px; width: 100%; position: relative;">
+      <canvas id="chart-severity-dist"></canvas>
+    </div>
+  </div>
+
+  <!-- Anomaly Profile Types (Bar Chart) -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          Anomaly Profile Frequencies
+        </div>
+        <div class="panel-subtitle">Incidents grouped by simulated behavioral vectors</div>
+      </div>
+    </div>
+    <div style="height: 270px; width: 100%;">
+      <canvas id="chart-types-dist"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Endpoints Impact Table -->
+<div class="glass-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        Endpoint Threat Distribution Summary
+      </div>
+      <div class="panel-subtitle">Incident density per simulated network node</div>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="cyber-table">
+      <thead>
+        <tr>
+          <th>Endpoint ID</th>
+          <th>Simulated IP</th>
+          <th>Role / Classification</th>
+          <th>Anomaly Count</th>
+          <th>Risk Rating</th>
+        </tr>
+      </thead>
+      <tbody id="endpoint-impact-tbody">
+        <!-- Injected via analytics.js -->
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" if user else "base_plain.html" if false else "base.html" %}
+
+{% block title %}NetGuard AI - NOC Security Mailbox{% endblock %}
+{% block page_title %}NOC Security Dispatch Mailbox{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h2 style="font-size: 1.2rem; color: #fff; font-weight: 700;">Simulated Security Verification Mailbox</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+      Out-of-band email dispatch receptor for security verification codes, password resets, and SOC notifications.
+    </p>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+      &larr; Back to Dashboard
+    </a>
+    <button class="btn btn-secondary" id="btn-refresh-inbox" style="padding: 6px 12px; font-size: 0.8rem;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+      Refresh
+    </button>
+    <button class="btn btn-danger" id="btn-clear-inbox" style="padding: 6px 12px; font-size: 0.8rem;">
+      Clear Mailbox
+    </button>
+  </div>
+</div>
+
+<!-- Mailbox Split-View Container -->
+<div class="glass-panel" style="padding: 0; overflow: hidden; display: flex; min-height: 520px; border-color: var(--border-neon);">
+  <!-- Left Column: Email List -->
+  <div style="width: 38%; min-width: 280px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; background: rgba(6, 9, 17, 0.4);">
+    <div style="padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em;">
+        INCOMING DISPATCHES (<span id="inbox-count">0</span>)
+      </span>
+      <span class="badge badge-normal" style="font-size: 0.7rem;">SIMULATED SMTP</span>
+    </div>
+
+    <div id="email-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+      <div style="padding: 30px 20px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+        Loading dispatches...
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Email Viewer -->
+  <div style="flex: 1; display: flex; flex-direction: column; background: rgba(13, 20, 36, 0.7);" id="email-viewer-pane">
+    <div id="no-email-selected" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); padding: 40px; text-align: center;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.4;">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <div style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 4px;">Select a Security Dispatch</div>
+      <div style="font-size: 0.85rem; max-width: 320px;">Click any incoming security message from the list on the left to read its contents and verification code.</div>
+    </div>
+
+    <div id="email-content-view" style="display: none; flex-direction: column; height: 100%;">
+      <!-- Email Header Details -->
+      <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px;">
+          <h3 id="view-email-subject" style="font-size: 1.15rem; color: #fff; font-weight: 700;">Subject</h3>
+          <span id="view-email-time" style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap;">--:--</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-family: var(--font-mono);">
+          <div><strong style="color: var(--text-muted);">From:</strong> <span id="view-email-sender" style="color: var(--cyan);">--</span></div>
+          <div><strong style="color: var(--text-muted);">To:</strong> <span id="view-email-recipient" style="color: #fff;">--</span></div>
+        </div>
+
+        <!-- Quick Code Bar if OTP present -->
+        <div id="view-otp-bar" style="display: none; margin-top: 14px; background: rgba(16, 185, 129, 0.12); border: 1px solid var(--green); border-radius: 6px; padding: 10px 14px; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.8rem; color: var(--green); font-weight: 600;">VERIFICATION CODE:</span>
+            <strong id="view-otp-code" style="font-family: var(--font-mono); font-size: 1.25rem; color: #fff; letter-spacing: 0.15em;">------</strong>
+          </div>
+          <button class="btn btn-primary" id="btn-copy-code" style="padding: 4px 12px; font-size: 0.75rem;">
+            Copy &amp; Return to Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Email Body HTML -->
+      <div id="view-email-body" style="padding: 24px; flex: 1; overflow-y: auto;">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentEmailId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadInbox();
+  setInterval(loadInbox, 4000);
+
+  document.getElementById('btn-refresh-inbox').addEventListener('click', loadInbox);
+  document.getElementById('btn-clear-inbox').addEventListener('click', clearInbox);
+});
+
+async function loadInbox() {
+  try {
+    const res = await fetch('/api/inbox');
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const emails = data.emails || [];
+
+    document.getElementById('inbox-count').textContent = emails.length;
+    renderEmailList(emails);
+  } catch (err) {
+    console.error('Failed to load inbox:', err);
+  }
+}
+
+function renderEmailList(emails) {
+  const container = document.getElementById('email-list-container');
+  if (!container) return;
+
+  if (emails.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.3;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        <div>No incoming security dispatches.</div>
+        <div style="font-size: 0.75rem; margin-top: 4px;">When you request a password reset code, it will be delivered here out-of-band.</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  emails.forEach(email => {
+    const item = document.createElement('div');
+    const isSelected = email.id === currentEmailId;
+    const isUnread = !email.is_read;
+
+    item.style.cssText = `
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: background 0.2s ease;
+      background: ${isSelected ? 'rgba(0, 240, 255, 0.08)' : (isUnread ? 'rgba(255,255,255,0.03)' : 'transparent')};
+      border-left: 3px solid ${isSelected ? 'var(--cyan)' : (isUnread ? 'var(--green)' : 'transparent')};
+    `;
+
+    item.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <span style="font-size: 0.8rem; font-weight: ${isUnread ? '700' : '500'}; color: ${isUnread ? '#fff' : 'var(--text-secondary)'};">
+          ${escapeHtml(email.sender.split('<')[0].trim())}
+        </span>
+        <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(email.timestamp.split(' ')[1] || email.timestamp)}</span>
+      </div>
+      <div style="font-size: 0.85rem; font-weight: ${isUnread ? '700' : '500'}; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        ${escapeHtml(email.subject)}
+      </div>
+      <div style="font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono);">
+        To: ${escapeHtml(email.recipient_email)}
+      </div>
+    `;
+
+    item.onclick = () => selectEmail(email);
+    container.appendChild(item);
+  });
+}
+
+async function selectEmail(email) {
+  currentEmailId = email.id;
+
+  try {
+    const res = await fetch(`/api/inbox/${email.id}`);
+    const full = res.ok ? await res.json() : email;
+
+    document.getElementById('no-email-selected').style.display = 'none';
+    const view = document.getElementById('email-content-view');
+    view.style.display = 'flex';
+
+    document.getElementById('view-email-subject').textContent = full.subject;
+    document.getElementById('view-email-time').textContent = full.timestamp;
+    document.getElementById('view-email-sender').textContent = full.sender;
+    document.getElementById('view-email-recipient').textContent = `${full.recipient_username} <${full.recipient_email}>`;
+    document.getElementById('view-email-body').innerHTML = full.body_html;
+
+    const otpBar = document.getElementById('view-otp-bar');
+    if (full.verification_code) {
+      otpBar.style.display = 'flex';
+      document.getElementById('view-otp-code').textContent = full.verification_code;
+
+      document.getElementById('btn-copy-code').onclick = () => {
+        navigator.clipboard.writeText(full.verification_code).then(() => {
+          showToast('Verification code copied! Returning to Password Reset...', 'success');
+          setTimeout(() => {
+            window.location.href = `/forgot-password?code=${full.verification_code}&user=${encodeURIComponent(full.recipient_username)}`;
+          }, 600);
+        });
+      };
+    } else {
+      otpBar.style.display = 'none';
+    }
+
+    loadInbox();
+  } catch (err) {
+    console.error('Failed to view email:', err);
+  }
+}
+
+async function clearInbox() {
+  if (!confirm('Are you sure you want to clear all messages from the simulated mailbox?')) return;
+  try {
+    const res = await fetch('/api/inbox/clear', { method: 'POST' });
+    if (res.ok) {
+      showToast('Mailbox cleared.', 'info');
+      currentEmailId = null;
+      document.getElementById('no-email-selected').style.display = 'flex';
+      document.getElementById('email-content-view').style.display = 'none';
+      loadInbox();
+    }
+  } catch (err) {
+    showToast('Error clearing mailbox: ' + err.message, 'danger');
+  }
+}
+
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+</script>
+{% endblock %}

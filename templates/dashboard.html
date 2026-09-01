@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Network Operations Dashboard{% endblock %}
+{% block page_title %}Network Operations Dashboard{% endblock %}
+
+{% block content %}
+<!-- Top Summary Metrics Grid -->
+<div class="metrics-grid">
+  <!-- Total Endpoints -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Total Endpoints</div>
+      <div class="metric-icon-wrap cyan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="card-total-endpoints">5</div>
+    <div class="metric-subtext">
+      <span>Simulated Nodes: EP-001..005</span>
+    </div>
+  </div>
+
+  <!-- Active Endpoints -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Active Endpoints</div>
+      <div class="metric-icon-wrap green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="card-active-endpoints">5 / 5</div>
+    <div class="metric-subtext positive">
+      <span class="pulse-dot"></span>
+      <span>100% Ingestion Rate</span>
+    </div>
+  </div>
+
+  <!-- Network Traffic -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Network Bandwidth</div>
+      <div class="metric-icon-wrap purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="card-current-bandwidth">-- Mbps</div>
+    <div class="metric-subtext">
+      <span>Aggregate simulated throughput</span>
+    </div>
+  </div>
+
+  <!-- Detected Anomalies -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Detected Anomalies</div>
+      <div class="metric-icon-wrap amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="card-detected-anomalies">--</div>
+    <div class="metric-subtext warning">
+      <span>Stored in SQLite netguard.db</span>
+    </div>
+  </div>
+
+  <!-- Critical Alerts -->
+  <div class="metric-card">
+    <div class="metric-header">
+      <div class="metric-label">Critical Alerts</div>
+      <div class="metric-icon-wrap red">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+    </div>
+    <div class="metric-value" id="card-critical-alerts">--</div>
+    <div class="metric-subtext danger">
+      <span>High &amp; Critical severity events</span>
+    </div>
+  </div>
+</div>
+
+<!-- Clickable Recent Anomaly Alert Banner (Section 10) -->
+<div class="recent-alert-box" id="dashboard-recent-alert" style="display: none;">
+  <div class="alert-box-top">
+    <div class="alert-tag">
+      <span class="pulse-dot" style="background: var(--critical);"></span>
+      <span id="alert-banner-badge">🚨 HIGH ANOMALY DETECTED</span>
+    </div>
+    <div class="alert-time" id="alert-banner-time">Timestamp: --:--:--</div>
+  </div>
+
+  <div class="alert-headline" id="alert-banner-headline">
+    Endpoint: EP-004 | IP: 192.168.1.104 | Confidence: 94%
+  </div>
+
+  <div class="alert-narrative" id="alert-banner-narrative">
+    EP-004 generated unusually high network traffic with 950 Mbps bandwidth, 420 active connections, and 14% packet loss.
+  </div>
+
+  <div class="alert-footer-meta">
+    <div class="alert-meta-items">
+      <div class="alert-meta-item"><strong>Bandwidth:</strong> <span id="alert-banner-bw">-- Mbps</span></div>
+      <div class="alert-meta-item"><strong>Connections:</strong> <span id="alert-banner-conns">--</span></div>
+      <div class="alert-meta-item"><strong>Packet Loss:</strong> <span id="alert-banner-loss">--%</span></div>
+    </div>
+    <div class="alert-click-hint">
+      <span>Click alert to open full AI anomaly breakdown &rarr;</span>
+    </div>
+  </div>
+</div>
+
+<!-- Real-time Live Network Telemetry Charts -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px;">
+  <!-- Live Bandwidth Chart -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+          Live Network Throughput
+        </div>
+        <div class="panel-subtitle">Aggregate Simulated Bandwidth (Mbps) — Dynamic 3s Refresh</div>
+      </div>
+      <span class="badge badge-normal" id="chart-bw-pill">STREAMING</span>
+    </div>
+    <div style="height: 250px; width: 100%;">
+      <canvas id="dashboardBandwidthChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Live Latency & Packet Loss Chart -->
+  <div class="glass-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Latency &amp; Packet Loss Dynamics
+        </div>
+        <div class="panel-subtitle">Average Round-Trip Time (ms) &amp; Dropped Packets (%)</div>
+      </div>
+      <span class="badge badge-normal" id="chart-lat-pill">STREAMING</span>
+    </div>
+    <div style="height: 250px; width: 100%;">
+      <canvas id="dashboardLatencyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Simulated Endpoints Status Row -->
+<div class="glass-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        Simulated Network Endpoints Overview
+      </div>
+      <div class="panel-subtitle">Synthetic Endpoints EP-001 through EP-005 (Software-Only Simulation)</div>
+    </div>
+    <a href="{{ url_for('endpoints') }}" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+      Manage All Endpoints &rarr;
+    </a>
+  </div>
+
+  <div class="endpoints-grid" id="dashboard-endpoints-grid">
+    <!-- Populated dynamically via dashboard.js -->
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

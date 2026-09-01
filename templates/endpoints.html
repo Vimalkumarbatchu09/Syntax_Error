@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - Simulated Endpoints Management{% endblock %}
+{% block page_title %}Simulated Network Endpoints{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h2 style="font-size: 1.2rem; color: #fff; font-weight: 700;">Simulated Endpoint Directory</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+      Synthetic telemetry probes EP-001 through EP-005 (100% Software-Based Network Simulation)
+    </p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <button class="btn btn-secondary" id="btn-refresh-endpoints" style="padding: 8px 16px; font-size: 0.85rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+      Refresh Nodes
+    </button>
+  </div>
+</div>
+
+<!-- Endpoints Cards Grid -->
+<div class="endpoints-grid" id="endpoints-container">
+  <!-- Dynamic cards rendered by endpoints.js -->
+</div>
+
+<!-- Endpoint Deep-Dive Detail Modal -->
+<div class="modal-overlay" id="endpoint-detail-modal">
+  <div class="modal-container" style="max-width: 780px;">
+    <div class="modal-header">
+      <div class="modal-header-title">
+        <span class="badge badge-normal" id="ep-modal-status">NORMAL</span>
+        <h3 id="ep-modal-title">Endpoint Inspection: EP-001</h3>
+      </div>
+      <button class="modal-close-btn" id="ep-modal-close-btn">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Overview & Location info -->
+      <div class="modal-section" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">ENDPOINT IDENTIFIER</div>
+          <div style="font-size: 1.3rem; font-weight: 700; color: #fff; font-family: var(--font-mono);" id="ep-modal-id">EP-001</div>
+          <div style="font-size: 0.85rem; color: var(--cyan); font-family: var(--font-mono);" id="ep-modal-ip">IP: 192.168.1.101</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">SIMULATED ROLE &amp; TOPOLOGY</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: #fff;" id="ep-modal-role">Core Gateway &amp; DNS</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);" id="ep-modal-location">Datacenter Rack A</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">ANOMALIES RECORDED</div>
+          <div style="font-size: 1.3rem; font-weight: 700; color: var(--amber); font-family: var(--font-mono);" id="ep-modal-anomaly-count">0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);" id="ep-modal-last-anomaly">Last: None</div>
+        </div>
+      </div>
+
+      <!-- Current Telemetry Grid -->
+      <div class="modal-section">
+        <div class="modal-section-title">Latest Captured Telemetry</div>
+        <div class="modal-telemetry-grid">
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">BANDWIDTH</div>
+            <div class="modal-tel-value" id="ep-modal-bw">-- Mbps</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">LATENCY</div>
+            <div class="modal-tel-value" id="ep-modal-lat">-- ms</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">PACKET LOSS</div>
+            <div class="modal-tel-value" id="ep-modal-loss">-- %</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">CPU LOAD</div>
+            <div class="modal-tel-value" id="ep-modal-cpu">-- %</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">RAM ALLOC</div>
+            <div class="modal-tel-value" id="ep-modal-ram">-- %</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">ACTIVE CONNS</div>
+            <div class="modal-tel-value" id="ep-modal-conns">--</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">PACKETS SENT</div>
+            <div class="modal-tel-value" id="ep-modal-sent">-- pps</div>
+          </div>
+          <div class="modal-tel-item">
+            <div class="modal-tel-label">PACKETS RECV</div>
+            <div class="modal-tel-value" id="ep-modal-recv">-- pps</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical Mini Chart -->
+      <div class="modal-section">
+        <div class="modal-section-title">Recent Telemetry Trend (Bandwidth &amp; Latency)</div>
+        <div style="height: 180px; width: 100%;">
+          <canvas id="endpointHistoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Endpoint Anomaly History List -->
+      <div class="modal-section">
+        <div class="modal-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Recent Anomalies for this Endpoint</span>
+          <a href="#" id="ep-modal-filter-link" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">View in Anomaly Logs &rarr;</a>
+        </div>
+        <div id="ep-modal-anomalies-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="ep-modal-close-footer">Close</button>
+      <button class="btn btn-danger" id="ep-modal-trigger-spike" style="font-size: 0.85rem;">
+        ⚡ Simulate Spike on this Node
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/endpoints.js') }}?v=2"></script>
+{% endblock %}

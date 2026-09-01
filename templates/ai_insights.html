@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}NetGuard AI - AI Network Insights{% endblock %}
+{% block page_title %}AI Network Intelligence &amp; Insights{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h2 style="font-size: 1.2rem; color: #fff; font-weight: 700;">Cognitive Threat Assessment</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">
+      Automated synthesis of multi-dimensional telemetry correlations &amp; preventative mitigation strategies
+    </p>
+  </div>
+  <button class="btn btn-secondary" id="btn-refresh-insights" style="padding: 8px 16px; font-size: 0.85rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+    Regenerate Insights
+  </button>
+</div>
+
+<!-- AI Key Observations Grid -->
+<div class="glass-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Automated Network Intelligence Observations
+      </div>
+      <div class="panel-subtitle">Real-time heuristics synthesized from Random Forest anomaly classification history</div>
+    </div>
+  </div>
+
+  <div id="insights-container" style="display: flex; flex-direction: column; gap: 14px;">
+    <!-- Populated dynamically -->
+    <div style="color: var(--text-muted); padding: 20px; text-align: center;">Analyzing telemetry patterns...</div>
+  </div>
+</div>
+
+<!-- Recommended Preventative Operations Plan -->
+<div class="glass-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        SOC Action Items &amp; Preventative Playbook
+      </div>
+      <div class="panel-subtitle">Tailored remediation priorities for simulated infrastructure protection</div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="cyber-table">
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>Mitigation Action</th>
+          <th>Operational Recommendation Details</th>
+          <th>Target Protocol</th>
+        </tr>
+      </thead>
+      <tbody id="recommendations-tbody">
+        <!-- Injected dynamically -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Architecture & Methodology Note -->
+<div class="glass-panel" style="background: linear-gradient(135deg, rgba(14, 23, 42, 0.9), rgba(13, 20, 36, 0.95)); border-color: var(--border-neon);">
+  <div class="panel-header" style="margin-bottom: 12px;">
+    <div class="panel-title" style="color: var(--cyan);">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+      Explainable AI (XAI) Telemetry Engine Architecture
+    </div>
+  </div>
+  <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6;">
+    NetGuard AI pairs a trained <strong>Random Forest Classifier (100 estimators)</strong> for high-accuracy binary classification (Normal vs Anomaly) with an <strong>XAI Telemetry Explanation Layer</strong>. Rather than treating machine learning as an uninterpretable black box, the system computes deviation ratios across 8 network features (bandwidth, latency, packet loss, CPU, RAM, active sockets, packets sent/received) relative to baseline operational profiles. This derivation enables transparent, deterministic explanations answering <em>what occurred</em>, <em>which features contributed</em>, <em>how severe the event is</em>, and <em>what actions the NOC operator should enact</em>.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  loadAiInsights();
+  document.getElementById('btn-refresh-insights').addEventListener('click', loadAiInsights);
+  window.addEventListener('netguard:anomaly-generated', () => loadAiInsights());
+});
+
+async function loadAiInsights() {
+  try {
+    const res = await fetch('/api/ai-insights');
+    if (!res.ok) return;
+
+    const data = await res.json();
+    renderInsights(data.insights || []);
+    renderRecommendations(data.recommendations || []);
+  } catch (err) {
+    console.error('Failed to load AI insights:', err);
+  }
+}
+
+function renderInsights(insights) {
+  const container = document.getElementById('insights-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+  insights.forEach(item => {
+    const box = document.createElement('div');
+    
+    let borderCol = 'var(--border-subtle)';
+    let badgeClass = 'badge-normal';
+    if (item.level === 'high') {
+      borderCol = 'rgba(239, 68, 68, 0.4)';
+      badgeClass = 'badge-critical';
+    } else if (item.level === 'medium') {
+      borderCol = 'rgba(245, 158, 11, 0.4)';
+      badgeClass = 'badge-warning';
+    }
+
+    box.style.cssText = `background: rgba(0,0,0,0.3); border: 1px solid ${borderCol}; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 8px;`;
+
+    box.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="badge ${badgeClass}">${escapeHtml(item.category)}</span>
+        <span style="color: var(--text-muted); font-size: 0.75rem; font-family: var(--font-mono);">AI Automated Assessment</span>
+      </div>
+      <div style="font-size: 1.05rem; font-weight: 600; color: #fff;">${escapeHtml(item.title)}</div>
+      <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">${escapeHtml(item.description)}</div>
+    `;
+
+    container.appendChild(box);
+  });
+}
+
+function renderRecommendations(recs) {
+  const tbody = document.getElementById('recommendations-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  recs.forEach(r => {
+    let pBadge = 'badge-normal';
+    if (r.priority === 'High') pBadge = 'badge-high';
+    else if (r.priority === 'Medium') pBadge = 'badge-warning';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="badge ${pBadge}">${r.priority}</span></td>
+      <td style="color: #fff; font-weight: 600;">${escapeHtml(r.action)}</td>
+      <td style="color: var(--text-secondary); font-size: 0.88rem;">${escapeHtml(r.details)}</td>
+      <td class="mono" style="color: var(--cyan); font-size: 0.8rem;">TCP/IP &bull; QoS Layer</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.git
+.gitignore
+.env
+.venv
+venv
+*.md
+verify_system.py
+train_model.py
+network_data.csv
